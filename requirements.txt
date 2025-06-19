@@ -13,3 +13,4 @@ pytz==2023.3
 six==1.16.0
 tzdata==2023.3
 vboxapi==1.0
+librosa>=0.10.0
