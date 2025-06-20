@@ -1,7 +1,7 @@
 import librosa
 import numpy as np
 import soundfile as sf  # type: ignore[import]
-from augment_data import find_cycle_beat_indices
+from data_augmentation.average_correlation import find_cycle_beat_indices
 
 def overlay_clicks(
     y: np.ndarray,
@@ -36,7 +36,7 @@ def overlay_clicks(
         length=length,
     )
 
-    return y + gain_beat * click_beats + gain_cycle * click_cycles
+    return y  + gain_cycle * click_cycles
 
 
 def enhance_sample_with_clicks(in_path, out_path, factor=1):
@@ -88,7 +88,7 @@ def enhance_sample_with_clicks(in_path, out_path, factor=1):
     sf.write(out_path, out_with_clicks, sr)
     print(f"Wrote {out_path}")
 
-enhance_sample_with_clicks("../sample8.wav","./click_sample8.wav")
+enhance_sample_with_clicks("../../sample8.wav","./click_sample8.wav")
 #sample 8 is 5
 
 # implement tempo code and chek for the window size because there is two beats so fast wara ba3ed!

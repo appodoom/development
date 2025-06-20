@@ -2,6 +2,27 @@ import numpy as np
 import librosa
 import soundfile as sf
 
+
+def sliding_cross_correlation(X,Y):
+    if Y.shape[1]>X.shape[1]:
+        X, Y= Y,X
+    best_score=-np.inf
+    best_offset=None
+    dim_X=np.linalg.norm(X)
+    dim_Y=np.linalg.norm(Y)
+
+    for offset in range(X.shape[1]-Y.shape[1]+1):
+        X_slider=X[ : , offset:Y.shape[1]+offset]
+        if dim_X==0 or dim_Y==0:
+            continue
+        else:
+            score=np.tensordot(X_slider,Y,axes=2)/(dim_Y*np.linalg.norm(X_slider))
+        if score>best_score:
+            best_score=score
+            best_offset=offset
+    return best_score
+
+
 def find_cycle_beat_indices(
     y,
     sr,
@@ -11,40 +32,26 @@ def find_cycle_beat_indices(
     hop_length: int = 512
 ) -> np.ndarray:
     tempo, beat_frames = librosa.beat.beat_track(y=y, sr=sr)
-    beat_times=librosa.frame_to_samples(beat_frames)
     y2 = np.concatenate((y, y))
     mel1 = librosa.feature.melspectrogram(y=y, sr=sr, n_mels=n_mels, hop_length=hop_length)
     mel2 = librosa.feature.melspectrogram(y=y2, sr=sr, n_mels=n_mels, hop_length=hop_length)
     mel1 = librosa.util.normalize(mel1, axis=1)
     mel2 = librosa.util.normalize(mel2, axis=1)
-    beat_duration=60/tempo
-    beat_durations=[]
-    for i in range(3,17):
-        beat_durations.append(i*beat_duration)
-    # shift=0
     corrs = []
-    # test=[sum(
-    #         np.correlate(mel1[i], mel2[i, shift:shift + mel1.shape[1]]))]
-    # shift+=1
-    # while (sum(
-    #         np.correlate(mel1[i], mel2[i, shift:shift + mel1.shape[1]]))<test[-1]):
-    #     shift+=1
-    #     test.append(sum(
-    #         np.correlate(mel1[i], mel2[i, shift:shift + mel1.shape[1]])))
-    for b in range(beat_times[0], len(y)):
+    intervals=np.diff(beat_frames)
+    frames_per_beat=int(np.round(np.mean(intervals)))
+    for b in range(min_beats, max_beats+1):
+        shift=b*frames_per_beat
         if b + mel1.shape[1] > mel2.shape[1]:
             break
-        corr_val = sum(
-            np.correlate(mel1[i], mel2[i, b:b + mel1.shape[1]])
-            for i in range(n_mels)
-        )
+        corr_val = sliding_cross_correlation(mel1, mel2[:,shift:shift+mel1.shape[1]])
     # print(corrs[:20])
         corrs.append(corr_val)
+    # print(corrs, len(corrs))
     corrs = np.array(corrs)
-    best_period = corrs[np.argmax(corrs)]/sr
-    best_beats=np.argmin([np.abs(best_period-beat_dur) for beat_dur in beat_durations])+3
-    # cycle_indices = np.arange(0, len(beat_frames), best_beats)
-    return best_beats
+    best_beats=np.argmax(corrs)+min_beats
+    cycle_indices = np.arange(0, len(beat_frames), best_beats)
+    return cycle_indices, beat_frames
 
 def enhance(y, sr):
     cycle_indices, beat_frames = find_cycle_beat_indices(y, sr)
@@ -83,5 +90,5 @@ def enhance_sample(in_path, out_path, factor):
     sf.write(out_path, out, samplerate=sr)
     print("Done")
 
-y, sr= librosa.load("../sample8.wav", sr=None)
+y, sr= librosa.load("../../sample8.wav", sr=None)
 print(find_cycle_beat_indices(y=y, sr=sr))
