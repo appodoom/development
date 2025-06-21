@@ -1,80 +1,93 @@
-import numpy as np
 import librosa
+import numpy as np
 
-def detect_cycle_length(
-    wav_path: str,
+def sliding_cross_correlation(X,Y):
+    if Y.shape[1]>X.shape[1]:
+        X, Y= Y,X
+    best_score=-np.inf
+    best_offset=None
+    dim_X=np.linalg.norm(X)
+    dim_Y=np.linalg.norm(Y)
+
+    for offset in range(X.shape[1]-Y.shape[1]+1):
+        X_slider=X[ : , offset:Y.shape[1]+offset]
+        if np.linalg.norm(X_slider)==0 or dim_Y==0:
+            continue
+        else:
+            score=np.tensordot(X_slider,Y,axes=2)/(dim_Y*np.linalg.norm(X_slider))
+        if score>best_score:
+            best_score=score
+            best_offset=offset
+    return best_score
+
+def get_onsets(y,sr):
+    onsets=librosa.onset.onset_detect(y=y , sr=sr)
+    onsets_avg=[onsets[0]//2]
+    for i in range(len(onsets)-1):
+        onsets_avg.append((onsets[i]+onsets[i+1])//2)
+    onsets_avg.append(onsets[-1]+(onsets[-1]-onsets_avg[-1]))
+    onsets_avg=librosa.frames_to_samples(onsets_avg)
+    onsets=librosa.frames_to_samples(onsets)
+    return onsets_avg, onsets
+
+def get_filtered_audio(y,sr):
+    new_y=y
+    onsets_avg, onsets=get_onsets(y=y,sr=sr)
+    intervals=[]
+    for i in range(len(onsets_avg)-1):
+        interval=(onsets_avg[i],onsets_avg[i+1])
+        intervals.append(interval)
+    tempo, beat_frames=librosa.beat.beat_track(y=y,sr=sr)
+    beat_samples=librosa.frames_to_samples(beat_frames)
+    beat_in_sec=60/tempo
+    beat_in_samples=int(sr*beat_in_sec)
+    window=beat_in_samples/8
+    for i in range(len(intervals)):
+        zero_interval=True
+        for beat in beat_samples:
+            start=intervals[i][0]
+            end=intervals[i][1]
+            if (beat>=start and beat<=end and (beat-onsets[i]<=window)):
+                zero_interval=False
+        if zero_interval:
+            slope=(y[start]-y[end])/(start-end)
+            b=y[start]-slope*start
+            for j in range(start,end+1):
+                new_y[j]= j*slope+b
+    return new_y
+
+def find_cycle_beat_indices(
+    y,
+    sr,
     min_beats: int = 3,
     max_beats: int = 16,
-    hop_length: int = 512,
-    harmonic_threshold: float = 0.90
-) -> int:
-    """
-    Estimate the darbukka/iqa‘ cycle length in beats.
-    
-    Args:
-      wav_path: path to the input WAV file
-      min_beats: smallest cycle to test (inclusive)
-      max_beats: largest cycle to test (inclusive)
-      hop_length: STFT / onset hop length
-      harmonic_threshold: fraction of the max-corr cutoff for sub-multiples
-    
-    Returns:
-      An integer tau between min_beats and max_beats.
-    """
-    # 1. Load & HPSS to isolate percussive
-    y, sr = librosa.load(wav_path, mono=True)
-    _, y_perc = librosa.effects.hpss(y)
+    n_mels: int = 128,
+    hop_length: int = 512
+) -> np.ndarray:
+    tempo, beat_frames = librosa.beat.beat_track(y=y, sr=sr)
+    y2 = np.concatenate((y, y))
+    mel1 = librosa.feature.melspectrogram(y=y, sr=sr, n_mels=n_mels, hop_length=hop_length)
+    mel2 = librosa.feature.melspectrogram(y=y2, sr=sr, n_mels=n_mels, hop_length=hop_length)
+    mel1 = librosa.util.normalize(mel1, axis=1)
+    mel2 = librosa.util.normalize(mel2, axis=1)
+    corrs = []
+    intervals=np.diff(beat_frames)
+    frames_per_beat=int(np.round(np.mean(intervals)))
+    for b in range(min_beats, max_beats+1):
+        shift=b*frames_per_beat
+        if b + mel1.shape[1] > mel2.shape[1]:
+            break
+        corr_val = sliding_cross_correlation(mel1, mel2[:,shift:shift+mel1.shape[1]])
+    # print(corrs[:20])
+        corrs.append(corr_val)
+    # print(corrs, len(corrs))
+    corrs = np.array(corrs)
+    best_beats=np.argmax(corrs)+min_beats
+    cycle_indices = np.arange(0, len(beat_frames), best_beats)
+    return best_beats
 
-    # 2. Onset-strength envelope
-    onset_env = librosa.onset.onset_strength(
-        y=y_perc, sr=sr, hop_length=hop_length
-    )
-
-    # 3. Beat-tracking
-    tempo, beat_frames = librosa.beat.beat_track(
-        onset_envelope=onset_env, sr=sr, hop_length=hop_length
-    )
-
-    # 4. Build beat-aligned vector a[i]
-    a = onset_env[beat_frames]
-    N = len(a)
-    if N < min_beats * 2:
-        raise RuntimeError(f"Too few beats ({N}) for cycle detection ≥{min_beats}.")
-
-    # 5. Zero-mean
-    a = a - np.mean(a)
-
-    # 6. Compute normalized linear autocorrelation for each tau
-    max_lag = min(max_beats, N // 2)
-    if max_lag < min_beats:
-        raise RuntimeError("No valid cycle-length candidates under these settings.")
-
-    def normcorr(tau):
-        L = N - tau
-        x = a[:L]
-        y2 = a[tau:tau+L]
-        denom = np.linalg.norm(x) * np.linalg.norm(y2)
-        return np.dot(x, y2) / denom if denom > 0 else 0.0
-
-    scores = {tau: normcorr(tau) for tau in range(min_beats, max_lag + 1)}
-
-    # 7. Pick best tau with sub-multiple check
-    tau_max = max(scores, key=scores.get)
-    C_max = scores[tau_max]
-
-    # collect all tau <= tau_max whose score ≥ threshold * C_max
-    candidates = [τ for τ, c in scores.items() if τ <= tau_max and c >= harmonic_threshold * C_max]
-    best_tau = min(candidates) if candidates else tau_max
-
-    return best_tau
-
-if __name__ == "__main__":
-    wav_file = "../../sample8.wav"
-    cycle = detect_cycle_length(
-        wav_file,
-        min_beats=3,
-        max_beats=16,
-        hop_length=512,
-        harmonic_threshold=0.90
-    )
-    print("Estimated cycle length:", cycle)
+def get_cycle_length(y,sr):
+    new_y=get_filtered_audio(y=y,sr=sr)
+    return find_cycle_beat_indices(y=new_y,sr=sr)
+y,sr=librosa.load("../../samples/sample8.wav", sr=None)
+print(get_cycle_length(y=y,sr=sr))
