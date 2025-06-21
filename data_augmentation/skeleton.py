@@ -89,5 +89,5 @@ def find_cycle_beat_indices(
 def get_cycle_length(y,sr):
     new_y=get_filtered_audio(y=y,sr=sr)
     return find_cycle_beat_indices(y=new_y,sr=sr)
-y,sr=librosa.load("../../samples/sample8.wav", sr=None)
+y,sr=librosa.load("../../samples/sample7.wav", sr=None)
 print(get_cycle_length(y=y,sr=sr))
