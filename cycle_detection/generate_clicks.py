@@ -1,7 +1,7 @@
 import librosa
 import numpy as np
 import soundfile as sf  # type: ignore[import]
-from data_augmentation.average_correlation import find_cycle_beat_indices
+from onset_correlation import cycle_length
 
 def overlay_clicks(
     y: np.ndarray,
@@ -36,7 +36,7 @@ def overlay_clicks(
         length=length,
     )
 
-    return y  + gain_cycle * click_cycles
+    return y  + click_beats* gain_beat + gain_cycle * click_cycles
 
 
 def enhance_sample_with_clicks(in_path, out_path, factor=1):
@@ -44,9 +44,8 @@ def enhance_sample_with_clicks(in_path, out_path, factor=1):
     y, sr = librosa.load(in_path, sr=None)
 
     # 2) detect beats & cycles
-    cycle_idxs, beat_frames = find_cycle_beat_indices(y, sr)
+    cycle_start_frames, beat_frames = cycle_length(y, sr, 12000)
     # convert cycle‐idxs (indices into beat_frames) to actual frame positions
-    cycle_start_frames = beat_frames[cycle_idxs]
 
     # 3) “enhance” (your existing shuffling/concatenation routine)
     out = y.copy()
@@ -87,8 +86,8 @@ def enhance_sample_with_clicks(in_path, out_path, factor=1):
     # 6) write
     sf.write(out_path, out_with_clicks, sr)
     print(f"Wrote {out_path}")
-
-enhance_sample_with_clicks("../../sample8.wav","./click_sample8.wav")
+for i in range(1,14):
+    enhance_sample_with_clicks(f"../../samples/sample{i}.wav",f"./click_sample{i}.wav")
 #sample 8 is 5
 
 # implement tempo code and chek for the window size because there is two beats so fast wara ba3ed!
