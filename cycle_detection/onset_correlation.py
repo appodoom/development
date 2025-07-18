@@ -1,6 +1,6 @@
 import librosa
 import numpy as np
-
+# from beat_detection.custom_beat_detection import get_beat_timestamps
 def sliding_cross_correlation(X,Y):
     if Y.shape[1]>X.shape[1]:
         X, Y= Y,X
@@ -22,7 +22,8 @@ def sliding_cross_correlation(X,Y):
 
 def cycle_length(y,sr, window):
     window = librosa.samples_to_frames([window])[0]
-    tempo, beat_frames=librosa.beat.beat_track(y=y,sr=sr)
+    tempo, beat_frames=librosa.beat.beat_track(y=y,sr=sr, tightness=100)
+    # beat_frames=get_beat_timestamps(y,sr,2048)
     print(tempo)
     correlation_scores=[0]*14
     mel=librosa.feature.melspectrogram(y=y,sr=sr)
@@ -38,12 +39,10 @@ def cycle_length(y,sr, window):
         tempo/=2
     for i in range(0,len(beat_frames),best_cycle):
         cycle_indices.append(beat_frames[i])
-    return np.array(cycle_indices), beat_frames
+    return best_cycle
 
 y,sr=librosa.load("../../samples/sample8.wav", sr=None)
-i=750
-while (i<48000):
-    print(f"For window size = {i} : {cycle_length(y=y,sr=sr,window=i)}")
-    i*=2
+print(f"{cycle_length(y=y,sr=sr,window=12000)}")
+
 
 
