@@ -41,7 +41,7 @@ def cycle_length(y,sr, window):
         cycle_indices.append(beat_frames[i])
     return best_cycle
 
-y,sr=librosa.load("../../samples/sample8.wav", sr=None)
+y,sr=librosa.load("../samples/sample8.wav", sr=None)
 print(f"{cycle_length(y=y,sr=sr,window=12000)}")
 
 
