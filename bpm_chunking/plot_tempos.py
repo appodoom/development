@@ -1,44 +1,63 @@
 import numpy as np
-
-# Workaround for librosa compatibility with newer NumPy versions:
-if not hasattr(np, "complex"):
-    np.complex = complex
-
+import soundfile as sf
 import librosa
 import matplotlib.pyplot as plt
 
-def plot(i):
-    y, sr = librosa.load(f"../samples/sample{i}.wav", sr=None)
+# Workaround for librosa compatibility
+if not hasattr(np, "complex"):
+    np.complex = complex
 
-    # Compute onset strength envelope
-    hop_length = 512
-    oenv = librosa.onset.onset_strength(y=y, sr=sr, hop_length=hop_length)
-    win_length=len(y)/sr
-    # print(win_length)
-    # Estimate instantaneous tempo per 
-    tempo=librosa.feature.tempo(y=y,sr=sr)
-    temp,_=librosa.beat.beat_track(y=y,sr=sr)
+def plot_and_listen(i):
+    # Load audio
+    y, sr = librosa.load(f"../data/samples/sample{i}.wav", sr=None)
+
+    # Compute tempo and beats
+    tempo = librosa.feature.tempo(y=y, sr=sr)
     tempos = librosa.feature.tempo(
-        onset_envelope=oenv,
+        y=y,
         sr=sr,
-        hop_length=hop_length,
         aggregate=None,
-        ac_size= 12,
+        ac_size=12,
         std_bpm=0.12,
         start_bpm=tempo
-
     )
-    print(tempo, temp)
-    # for i in range(len(tempos)):
-    #     print(tempos[i])
-    # Convert frame indices to time in seconds
-    times = librosa.frames_to_time(np.arange(len(tempos)), sr=sr, hop_length=hop_length)
+    
+    _, beats = librosa.beat.beat_track(y=y, sr=sr, bpm=tempos)
+    beat_times = librosa.frames_to_time(beats, sr=sr)
+    
+    # Create and save new audio with clicks
+    click_track = librosa.clicks(times=beat_times, sr=sr, length=len(y))
+    y_new = 0.8 * y + click_track
+    output_path = f"../data/samples_with_beats/sample{i}.wav"
+    sf.write(output_path, y_new, sr)
 
-    # Plot tempo variation over time
-    plt.figure()
-    plt.plot(times, tempos)
-    plt.xlabel("Time (s)")
+    # Create figure with two subplots
+    plt.figure(figsize=(14, 8))
+    
+    # First subplot: Tempo variation
+    plt.subplot(2, 1, 1)
+    tempo_times = librosa.frames_to_time(np.arange(len(tempos)), sr=sr)
+    plt.plot(tempo_times, tempos, label='Tempo', color='green')
+    for bt in beat_times:
+        plt.axvline(x=bt, color='red', alpha=0.3, linestyle='--', linewidth=1)
     plt.ylabel("Tempo (BPM)")
-    plt.title("Tempo Variation Over Time")
+    plt.title("Tempo Variation Over Time with Beat Positions")
+    plt.grid(alpha=0.3)
+    plt.legend()
+
+    # Second subplot: Waveform with beats
+    plt.subplot(2, 1, 2)
+    time = np.arange(len(y)) / sr
+    plt.plot(time, y, alpha=0.7, label='Waveform', color='blue', linewidth=0.8)
+    for bt in beat_times:
+        plt.axvline(x=bt, color='red', alpha=0.5, linestyle='--', linewidth=1.2)
+    plt.xlabel("Time (s)")
+    plt.ylabel("Amplitude")
+    plt.title("Waveform with Beat Markers")
+    plt.grid(alpha=0.3)
+    plt.legend()
+
+    plt.tight_layout()
     plt.show()
-plot(11)
+
+plot_and_listen(8)
