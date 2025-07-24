@@ -15,15 +15,20 @@ def plot(i):
     oenv = librosa.onset.onset_strength(y=y, sr=sr, hop_length=hop_length)
     win_length=len(y)/sr
     # print(win_length)
-    # Estimate instantaneous tempo per frame
-    tempos = librosa.beat.tempo(
+    # Estimate instantaneous tempo per 
+    tempo=librosa.feature.tempo(y=y,sr=sr)
+    temp,_=librosa.beat.beat_track(y=y,sr=sr)
+    tempos = librosa.feature.tempo(
         onset_envelope=oenv,
         sr=sr,
         hop_length=hop_length,
         aggregate=None,
-        ac_size= win_length
+        ac_size= 12,
+        std_bpm=0.12,
+        start_bpm=tempo
 
     )
+    print(tempo, temp)
     # for i in range(len(tempos)):
     #     print(tempos[i])
     # Convert frame indices to time in seconds
@@ -36,4 +41,4 @@ def plot(i):
     plt.ylabel("Tempo (BPM)")
     plt.title("Tempo Variation Over Time")
     plt.show()
-plot(8)
+plot(11)
