@@ -26,10 +26,10 @@ def plot_and_listen(i):
     beat_times = librosa.frames_to_time(beats, sr=sr)
     
     # Create and save new audio with clicks
-    click_track = librosa.clicks(times=beat_times, sr=sr, length=len(y))
-    y_new = 0.8 * y + click_track
-    output_path = f"../data/samples_with_beats/sample{i}.wav"
-    sf.write(output_path, y_new, sr)
+    # click_track = librosa.clicks(times=beat_times, sr=sr, length=len(y))
+    # y_new = 0.8 * y + click_track
+    # output_path = f"../data/samples_with_beats/sample{i}.wav"
+    # sf.write(output_path, y_new, sr)
 
     # Create figure with two subplots
     plt.figure(figsize=(14, 8))
@@ -60,4 +60,5 @@ def plot_and_listen(i):
     plt.tight_layout()
     plt.show()
 
-plot_and_listen(8)
+for j in range (1, 14):
+    plot_and_listen(j)
