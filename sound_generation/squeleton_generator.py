@@ -17,7 +17,7 @@ in_bpm = 120  # bpm
 in_skeleton = [(2, "D"), (1, "D"), (1, "PA2")]
 # This means, first beat is doom, after 1 beat place tek, after 0.5 beats place open tek, after 1 beat doom, then reiterate
 
-in_maxsubd = 1000  # smallest note is an 8th of a beat
+in_maxsubd = 2  # smallest note is an 8th of a beat
 in_num_cycles = 16  # cycles
 
 
