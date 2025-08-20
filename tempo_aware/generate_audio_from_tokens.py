@@ -2,7 +2,7 @@ import soundfile as sf
 import numpy as np
 import re
 import os
-from get_corpus import get_note_duration, get_corpus
+from get_corpus import get_note_duration
 
 
 def generate_audio_from_tokens(
@@ -44,9 +44,3 @@ def generate_audio_from_tokens(
 
     combined = np.concatenate(segments)
     sf.write("old1_regen.wav", data=combined, samplerate=fs)
-
-
-list_of_tokens, tempo = get_corpus(
-    fundamentals_path="../mel_48000.json", file_path="../data/first_data/old1.wav"
-)
-generate_audio_from_tokens(list_of_tokens=list_of_tokens, tempo=tempo)
