@@ -1,6 +1,8 @@
 import librosa
 import json
 import numpy as np
+import matplotlib.pyplot as plt
+import librosa.display
 
 
 def get_note_duration(quarter_duration):
@@ -150,6 +152,58 @@ def get_intervals_for_duration(y, sr, hop_length=512):
     return intervals
 
 
+def plot_mel(
+    index: int,
+    mel: np.ndarray,
+    sr: int = 48000,
+    hop_length: int = 512,
+    out_path: str = "./mel1.png",
+    is_db: bool = False,
+    fmin: float = 0.0,
+    fmax: float | None = None,
+    title: str = "Mel Spectrogram (dB)",
+) -> None:
+    out_path = out_path[-1] + str(index)
+    """
+    Plot and save a Mel spectrogram.
+
+    Parameters
+    ----------
+    mel : np.ndarray
+        Mel spectrogram matrix. Shape (n_mels, n_frames).
+        If is_db=False, this is power (or magnitude^2). If is_db=True, it’s in dB.
+    sr : int
+        Audio sample rate used to generate `mel` (for time axis).
+    hop_length : int
+        Hop length used when generating `mel` (for time axis).
+    out_path : str
+        Where to save the image (e.g., 'mel.png').
+    is_db : bool
+        Set True if `mel` is already in dB. If False, will convert with power_to_db.
+    fmin, fmax : float | None
+        Min/max Mel (Hz) for y-axis scaling. Keep None to let librosa infer.
+    title : str
+        Plot title.
+    """
+    M_db = mel if is_db else librosa.power_to_db(mel, ref=np.max)
+
+    plt.figure(figsize=(10, 4))
+    librosa.display.specshow(
+        M_db,
+        x_axis="time",
+        y_axis="mel",
+        sr=sr,
+        hop_length=hop_length,
+        fmin=fmin,
+        fmax=fmax,
+    )
+    plt.colorbar(format="%+2.0f dB", label="Amplitude (dB)")
+    plt.title(title)
+    plt.tight_layout()
+    plt.savefig(out_path, dpi=200, bbox_inches="tight")
+    plt.close()
+
+
 def get_corpus(fundamentals_path, file_path):
     y, sr = load_file(file_path)
     y = librosa.resample(y, orig_sr=sr, target_sr=48000)
@@ -163,16 +217,32 @@ def get_corpus(fundamentals_path, file_path):
     quarter_duration = 60.0 / tempo  # in seconds
     note_durations = get_note_duration(quarter_duration)  # in seconds
     classified_hits = []
+    count = 0
     for interval, interval_dur in zip(intervals, intervals_duration):
         segment = y[interval[0] : interval[1]]
         mel = librosa.feature.melspectrogram(y=segment, sr=sr)  # TODO revisit
+        logmel_db = librosa.power_to_db(mel, ref=np.max, top_db=80)
+        # if count == 0:
+        #     print("current sample: ", interval[1])
+        if count == 8:
+            plot_mel(mel=mel, index=count)
+            print("hi")
+
+            break
         best_score = -np.inf
         best_hit = ""
         for fundamental_hit in fundamentals:
-            score, _ = sliding_cross_correlation(mel, fundamentals[fundamental_hit])
+            score, _ = sliding_cross_correlation(
+                logmel_db, fundamentals[fundamental_hit]
+            )
+            # print(
+            #     f"Current fundemental is: {fundamental_hit} with corr score = {score}"
+            # )
             if score > best_score:
                 best_score = score
                 best_hit = fundamental_hit
+        # print(f"Choosen fundemental is: {best_hit} with max corr score = {best_score}")
+        # print("")
         hit_duration = (interval_dur[1] - interval_dur[0]) / sr  # in seconds
         min_diff = np.inf
         best_note = ""
@@ -181,10 +251,66 @@ def get_corpus(fundamentals_path, file_path):
             if diff < min_diff:
                 min_diff = diff
                 best_note = str(note)
+        count += 1
         classified_hits.append(best_hit + "_" + best_note)
     return classified_hits, tempo
 
 
-# classified_hits, _ = get_corpus(
-#     fundamentals_path="../mel_48000.json", file_path="../data/first_data/old1.wav"
+def get_corpus_old(fundamentals_path, file_path):
+    y, sr = load_file(file_path)
+    y = librosa.resample(y, orig_sr=sr, target_sr=48000)
+    sr = 48000
+    y = np.concatenate([np.zeros(48000), y])
+    fundamentals = load_json(fundamentals_path)
+    intervals_duration = get_intervals_for_duration(y, sr)
+    intervals = get_intervals(y, sr)
+    count = 0
+    tempo = adjust_tempo(y, sr)
+    quarter_duration = 60.0 / tempo  # in seconds
+    note_durations = get_note_duration(quarter_duration)  # in seconds
+    classified_hits = []
+    for interval, interval_dur in zip(intervals, intervals_duration):
+        if count == 2:
+            break
+        segment = y[interval[0] : interval[1]]
+        mel = librosa.feature.melspectrogram(y=segment, sr=sr)  # TODO revisit
+        plot_mel(mel=mel, index=count)
+        print("hi")
+        best_score = -np.inf
+        best_hit = ""
+        for fundamental_hit in fundamentals:
+            score, _ = sliding_cross_correlation(mel, fundamentals[fundamental_hit])
+            # print(
+            #     f"Current fundemental is: {fundamental_hit} with corr score = {score}"
+            # )
+            if score > best_score:
+                best_score = score
+                best_hit = fundamental_hit
+        # print(f"Choosen fundemental is: {best_hit} with max corr score = {best_score}")
+        # print("")
+        hit_duration = (interval_dur[1] - interval_dur[0]) / sr  # in seconds
+        min_diff = np.inf
+        best_note = ""
+        for note in note_durations:
+            diff = abs(note_durations[note] - hit_duration)
+            if diff < min_diff:
+                min_diff = diff
+                best_note = str(note)
+        count += 1
+        classified_hits.append(best_hit + "_" + best_note)
+    return classified_hits, tempo
+
+
+classified_hits, _ = get_corpus(
+    fundamentals_path="../log_mels.json", file_path="../first_data/old1.wav"
+)
+# print("")
+# classified_hits_old, _ = get_corpus_old(
+#     fundamentals_path="../mel.json", file_path="../first_data/old1.wav"
 # )
+# print("")
+
+
+# print("old approach : ", classified_hits_old)
+# print("")
+# print("new approach: ", classified_hits)

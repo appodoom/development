@@ -5,6 +5,7 @@ import matplotlib.pyplot as plt
 
 def plot_wav(path, start_sec=None, end_sec=None):
     y, sr = librosa.load(path, sr=None)
+    
     times = np.arange(len(y)) / sr
     if start_sec is not None or end_sec is not None:
         s = int(start_sec * sr) if start_sec is not None else 0

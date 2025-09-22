@@ -2,16 +2,16 @@ import soundfile as sf
 import numpy as np
 import re
 import os
-from get_corpus import get_note_duration
+from get_corpus import get_note_duration, get_corpus_old
 
 
 def generate_audio_from_tokens(
-    list_of_tokens, tempo, audio_folder="../data/fundemental_hits"
+    list_of_tokens, tempo, audio_folder="../fundemental_hits"
 ):
     quarter_duration = 60.0 / tempo[0]
     note_durations = get_note_duration(quarter_duration)
 
-    token_re = re.compile(r"([A-Za-z])_(\d+(?:\.\d+)?)")
+    token_re = re.compile(r"^([A-Za-z0-9]+)_(\d+(?:\.\d+)?)$")
 
     chosen_paths = []
     durations = []
@@ -43,4 +43,22 @@ def generate_audio_from_tokens(
         segments.append(data)
 
     combined = np.concatenate(segments)
-    sf.write("old1_regen.wav", data=combined, samplerate=fs)
+    sf.write("old1_regen_new.wav", data=combined, samplerate=fs)
+
+
+classified_hits_old, tempo_old = get_corpus_old(
+    fundamentals_path="../mel.json", file_path="../first_data/old1.wav"
+)
+classified_hits, tempo = get_corpus_old(
+    fundamentals_path="../log_mels.json", file_path="../first_data/old1.wav"
+)
+print(classified_hits)
+generate_audio_from_tokens(list_of_tokens=classified_hits, tempo=tempo)
+# print(classified_hits)
+count = 0
+for i in range(len(classified_hits)):
+    if classified_hits[i] != classified_hits_old[i]:
+        count += 1
+print(
+    f"The number of differences is: {count} and the total len is: {len(classified_hits)}"
+)
