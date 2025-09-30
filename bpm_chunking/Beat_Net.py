@@ -26,7 +26,7 @@ def beatnet_offline_beats(wav_path: str) -> np.ndarray:
         Beat times in seconds.
     """
     # model=1 (one of the pretrained CRNNs), offline + DBN uses non-causal Viterbi decoding
-    est = BeatNet(model=1, mode='offline', inference_model='DBN', plot=[], thread=False)
+    est = BeatNet(model=1, mode='online', inference_model='PF', plot=[], thread=False, device='cpu')
     out = est.process(wav_path)          # BeatNet returns a (num_beats, 2) array in offline mode
 
     # BeatNet README: first column contains beat times; second column is downbeat-related info

@@ -1,7 +1,7 @@
 import librosa
 import json
 import numpy as np
-
+import soundfile as sf
 
 def get_note_duration(quarter_duration):
     return {
@@ -152,6 +152,7 @@ def get_intervals_for_duration(y, sr, hop_length=512):
 
 def get_corpus(fundamentals_path, file_path):
     y, sr = load_file(file_path)
+    y=y[:5*sr]
     y = librosa.resample(y, orig_sr=sr, target_sr=48000)
     sr = 48000
     y = np.concatenate([np.zeros(48000), y])
@@ -163,16 +164,21 @@ def get_corpus(fundamentals_path, file_path):
     quarter_duration = 60.0 / tempo  # in seconds
     note_durations = get_note_duration(quarter_duration)  # in seconds
     classified_hits = []
+    j=0
     for interval, interval_dur in zip(intervals, intervals_duration):
         segment = y[interval[0] : interval[1]]
+        sf.write(file=f"./hits/hit{j}.wav",data=segment, samplerate=sr)
         mel = librosa.feature.melspectrogram(y=segment, sr=sr)  # TODO revisit
         best_score = -np.inf
         best_hit = ""
+        print(f"Hit number {j}:")
         for fundamental_hit in fundamentals:
             score, _ = sliding_cross_correlation(mel, fundamentals[fundamental_hit])
+            print(f"Score for {fundamental_hit}: {score}")
             if score > best_score:
                 best_score = score
                 best_hit = fundamental_hit
+        print("-----------------------")
         hit_duration = (interval_dur[1] - interval_dur[0]) / sr  # in seconds
         min_diff = np.inf
         best_note = ""
@@ -182,9 +188,9 @@ def get_corpus(fundamentals_path, file_path):
                 min_diff = diff
                 best_note = str(note)
         classified_hits.append(best_hit + "_" + best_note)
+        j+=1
     return classified_hits, tempo
 
-
-# classified_hits, _ = get_corpus(
-#     fundamentals_path="../mel_48000.json", file_path="../data/first_data/old1.wav"
-# )
+classified_hits, _ = get_corpus(
+    fundamentals_path="../mel_48000.json", file_path="../../data/first_data/old1.wav"
+)

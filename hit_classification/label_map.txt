@@ -1,0 +1,4 @@
+0	doum
+1	tak
+2	tik
+3	pa2
