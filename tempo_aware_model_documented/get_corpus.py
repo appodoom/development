@@ -16,12 +16,12 @@ def adjust_tempo(y, sr):
     return tempo
 
 
-def get_corpus(fundamentals_path, file_path):
-    y, sr = load_wav_file(file_path)
+def get_corpus(fundamentals_json_mel_path, wav_file_path):
+    y, sr = load_wav_file(wav_file_path)
     y = librosa.resample(y, orig_sr=sr, target_sr=48000)
     sr = 48000
     y = np.concatenate([np.zeros(48000), y])
-    fundamentals = load_json_file(fundamentals_path)[0]
+    fundamentals = load_json_file(fundamentals_json_mel_path)[0]
     intervals_duration = get_intervals_for_duration(y, sr)
     intervals = get_intervals(y, sr)
     tempo = adjust_tempo(y, sr)
@@ -66,7 +66,7 @@ def get_corpus(fundamentals_path, file_path):
             remaining_dur = abs(whole_note_dur - hit_duration)
             # print(remaining_dur)
             if remaining_dur != 0:
-                nb_of_complete_dur = int(hit_duration // whole_note_dur)
+                nb_of_complete_dur = int((hit_duration // whole_note_dur)[0])
                 # print(f"nb_of_complete_dur = {nb_of_complete_dur}")
                 remaining_dur -= whole_note_dur * nb_of_complete_dur
                 for note in note_durations:
@@ -80,8 +80,8 @@ def get_corpus(fundamentals_path, file_path):
     return classified_hits, tempo
 
 
-classified_hits, _ = get_corpus(
-    fundamentals_path="../mel.json",
-    file_path="../data/skeleton_and_silence_cycle.wav",
-)
-print(classified_hits)
+# classified_hits, _ = get_corpus(
+#     fundamentals_json_mel_path="../mel.json",
+#     wav_file_path="../data/skeleton_and_silence_cycle.wav",
+# )
+# print(classified_hits)

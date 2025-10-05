@@ -1,0 +1,54 @@
+import soundfile as sf
+import numpy as np
+import re
+import os
+from get_corpus import get_corpus, get_note_duration
+
+
+def generate_audio_from_tokens(
+    list_of_tokens, tempo, audio_folder="../data/fundemental_hits"
+):
+    quarter_duration = 60.0 / tempo[0]
+    note_durations = get_note_duration(quarter_duration)
+
+    token_re = re.compile(r"^([A-Za-z0-9]+)_(\d+(?:\.\d+)?)$")
+
+    chosen_paths = []
+    durations = []
+
+    for token in list_of_tokens:
+        subs = token_re.findall(token)
+        for letter, dur_str in subs:
+            dur_key = float(dur_str)
+            dur_seconds = note_durations[dur_key]
+            wav_file = os.path.join(audio_folder, f"{letter}.wav")
+
+            chosen_paths.append(wav_file)
+            durations.append(dur_seconds)
+            print(f"→ will play {letter}.wav for {dur_seconds:.3f}s")
+
+    segments = []
+    for path, dur in zip(chosen_paths, durations):
+        data, fs = sf.read(path)
+        if data.ndim > 1:
+            data = np.mean(data, axis=1)
+        # data = data * 3
+
+        target_len = int(dur * fs)  # in samples
+        if data.shape[0] < target_len:
+            pad = np.zeros(target_len - data.shape[0], dtype=data.dtype)
+            data = np.concatenate([data, pad])
+        else:
+            data = data[:target_len]
+        segments.append(data)
+
+    combined = np.concatenate(segments)
+    sf.write("silence_cycle_regen.wav", data=combined, samplerate=fs)
+
+
+classified_hits, tempo = get_corpus(
+    fundamentals_json_mel_path="../mel.json",
+    wav_file_path="../data/skeleton_and_silence_cycle.wav",
+)
+print(classified_hits)
+generate_audio_from_tokens(list_of_tokens=classified_hits, tempo=tempo)
