@@ -1,3 +1,6 @@
 import librosa
+import soundfile as sf
 
-print(librosa.load(path="./fundemental_hits/doum.wav", sr=None))
+y, sr = librosa.load(path="./data/fundemental_hits/doum.wav", sr=None)
+y1 = [0] * len(y)
+sf.write("./data/fundemental_hits/S.wav", y1, sr)
