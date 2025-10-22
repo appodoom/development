@@ -1,0 +1,7 @@
+filepath,true_label,pred_label,confidence
+mels_data\pa2\0465.npy,pa2,doum,0.731022954
+mels_data\tik\0023.npy,tik,tak,0.725622714
+mels_data\pa2\0169.npy,pa2,tak,0.716375887
+mels_data\doum\0175.npy,doum,tak,0.819753945
+mels_data\tik\0057.npy,tik,tak,0.590195537
+mels_data\pa2\0586.npy,pa2,doum,0.516261339
