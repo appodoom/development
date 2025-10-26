@@ -7,7 +7,7 @@ SAMPLE_RATE = 48000
 N_FFT = 1024
 HOP_LENGTH = 256
 N_MELS = 64
-DATA_DIR = "./data"
+DATA_DIR = "../../data/Tracks_with_onsets"
 SAVE_DIR = "./mels_data"
 
 
