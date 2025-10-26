@@ -16,7 +16,7 @@ from sklearn.metrics import accuracy_score
 # -------------------
 DATA_DIR       = "../../data/Tracks_with_onsets"
 OUT_PATH       = "stroke_knn_model.joblib"
-OUT_ERRORS_DIR = "misclassified_by_pred"   # <--- added: root folder for misclassified files
+OUT_ERRORS_DIR = "../../data/misclassified_by_pred"   # <--- added: root folder for misclassified files
 SR             = 48000
 N_FFT          = 1024
 HOP            = 256
