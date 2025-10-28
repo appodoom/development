@@ -1,7 +1,6 @@
 import os
 import glob
 import math
-import csv
 import random
 import numpy as np
 import torch
@@ -45,12 +44,14 @@ random.seed(SEED)
 np.random.seed(SEED)
 torch.manual_seed(SEED)
 
+
 # -------------------- Dataset --------------------
 def list_files_per_class(root_dir, classes):
     per_class = {}
     for c in classes:
         per_class[c] = sorted(glob.glob(os.path.join(root_dir, c, "*.npy")))
     return per_class
+
 
 # Split dataset into training, validation, testing
 def stratified_split(per_class_files, val_ratio, test_ratio, seed=SEED):
@@ -78,6 +79,7 @@ def stratified_split(per_class_files, val_ratio, test_ratio, seed=SEED):
     rng.shuffle(test)
     return train, val, test
 
+
 def pad_or_crop_time(mel, target_frames):
     """mel: (n_mels, T). Pads with zeros (right) or center-crops to target_frames."""
     if target_frames is None:
@@ -91,6 +93,7 @@ def pad_or_crop_time(mel, target_frames):
     start = (T - target_frames) // 2
     end = start + target_frames
     return mel[:, start:end]
+
 
 class MelDataset(Dataset):
     def __init__(self, samples, compute_stats=False, mean=None, std=None):
@@ -117,6 +120,7 @@ class MelDataset(Dataset):
         label = torch.tensor(label, dtype=torch.long)
         return mel, label, path
 
+
 # -------------------- Train-set mean/std --------------------
 def compute_mean_std(train_samples):
     """
@@ -139,12 +143,14 @@ def compute_mean_std(train_samples):
     std = math.sqrt(variance) if variance > 0 else 1.0
     return float(mean), float(std)
 
+
 # -------------------- Model --------------------
 class SmallAudioCNN(nn.Module):
     """
     Lightweight CNN with AdaptiveAvgPool for variable-length time axis.
     Input: (B, 1, n_mels, T)
     """
+
     def __init__(self, n_classes):
         super().__init__()
         self.features = nn.Sequential(
@@ -172,6 +178,7 @@ class SmallAudioCNN(nn.Module):
         x = self.classifier(x)
         return x
 
+
 # -------------------- Training / Evaluation --------------------
 def train_one_epoch(model, loader, criterion, optimizer, device="cpu"):
     model.train()
@@ -188,6 +195,7 @@ def train_one_epoch(model, loader, criterion, optimizer, device="cpu"):
         correct += (pred == yb).sum().item()
         total += xb.size(0)
     return running_loss / max(1, total), correct / max(1, total)
+
 
 def evaluate(model, loader, criterion, device="cpu"):
     model.eval()
@@ -211,11 +219,13 @@ def evaluate(model, loader, criterion, device="cpu"):
         np.array(all_pred),
     )
 
+
 def confusion_matrix(y_true, y_pred, num_classes):
     cm = np.zeros((num_classes, num_classes), dtype=int)
     for t, p in zip(y_true, y_pred):
         cm[t, p] += 1
     return cm
+
 
 def per_class_accuracy(cm):
     per_cls = []
@@ -224,6 +234,7 @@ def per_class_accuracy(cm):
         acc = (cm[i, i] / denom) if denom > 0 else 0.0
         per_cls.append(acc)
     return per_cls
+
 
 def save_misclassified(model, loader, classes, out_csv, device="cpu", mapping_csv=None):
     """
@@ -260,15 +271,23 @@ def save_misclassified(model, loader, classes, out_csv, device="cpu", mapping_cs
                     )
 
     import csv as _csv
+
     with open(out_csv, "w", newline="", encoding="utf-8") as f:
         writer = _csv.DictWriter(
             f,
-            fieldnames=["mel_path", "wav_path", "true_label", "pred_label", "confidence"],
+            fieldnames=[
+                "mel_path",
+                "wav_path",
+                "true_label",
+                "pred_label",
+                "confidence",
+            ],
         )
         writer.writeheader()
         writer.writerows(rows)
 
     return len(rows)
+
 
 # -------------------- Main --------------------
 def main():
@@ -313,15 +332,26 @@ def main():
 
     # build class-weight tensor in CLASSES order
     try:
-        weight_vec = torch.tensor([float(CLASS_WEIGHTS[c]) for c in CLASSES], dtype=torch.float32, device=device)
+        weight_vec = torch.tensor(
+            [float(CLASS_WEIGHTS[c]) for c in CLASSES],
+            dtype=torch.float32,
+            device=device,
+        )
     except KeyError as e:
         missing = str(e).strip("'")
-        raise ValueError(f"CLASS_WEIGHTS is missing an entry for label '{missing}'. Provide a number for every label in CLASSES.") from None
+        raise ValueError(
+            f"CLASS_WEIGHTS is missing an entry for label '{missing}'. Provide a number for every label in CLASSES."
+        ) from None
 
-    print("Class weights (in CLASSES order):", [float(w) for w in weight_vec.cpu().numpy()])
+    print(
+        "Class weights (in CLASSES order):",
+        [float(w) for w in weight_vec.cpu().numpy()],
+    )
 
     model = SmallAudioCNN(n_classes=len(CLASSES)).to(device)
-    criterion = nn.CrossEntropyLoss(weight=weight_vec)  # <<— per-label numbers applied here
+    criterion = nn.CrossEntropyLoss(
+        weight=weight_vec
+    )  # <<— per-label numbers applied here
     optimizer = torch.optim.Adam(model.parameters(), lr=LR)
 
     # 6) train with early stopping
@@ -351,7 +381,9 @@ def main():
                     "classes": CLASSES,
                     "mean": mean,
                     "std": std,
-                    "class_weights": [float(w) for w in weight_vec.detach().cpu().numpy()],
+                    "class_weights": [
+                        float(w) for w in weight_vec.detach().cpu().numpy()
+                    ],
                 },
                 MODEL_PATH,
             )
@@ -387,6 +419,7 @@ def main():
     # 9) save misclassified
     n_mis = save_misclassified(model, test_loader, CLASSES, MISCLASS_CSV, device)
     print(f"\nMisclassified examples saved to {MISCLASS_CSV} (count={n_mis})")
+
 
 if __name__ == "__main__":
     main()
