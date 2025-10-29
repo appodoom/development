@@ -58,12 +58,12 @@ def generate_audio_from_tokens(
         segments.append(data)
 
     combined = np.concatenate(segments)
-    sf.write("old1_regen_new.wav", data=combined, samplerate=fs)
+    sf.write("old4_regen_new.wav", data=combined, samplerate=fs)
 
 
 classified_hits_with_model_pred, tempo = get_corpus(
     fundamentals_path="../mel.json",
-    file_path="../data/first_data/old1.wav",
+    file_path="../data/first_data/old4.wav",
     model_pred=True,
     log_mel=False,
 )
