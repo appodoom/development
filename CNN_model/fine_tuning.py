@@ -10,7 +10,7 @@ import librosa
 
 # ======================= CONFIG =======================
 CHECKPOINT_PATH = "best_model.pt"  # your existing .pt
-NEW_WAV_DIR = "./data/fine_tuned_data"  # new data root (subfolders = class names)
+NEW_WAV_DIR = "../../data/interference_data"  # new data root (subfolders = class names)
 FINETUNED_PATH = "best_model_finetuned.pt"
 
 VAL_RATIO = 0.15
@@ -18,7 +18,7 @@ TEST_RATIO = 0.15
 BATCH_SIZE = 16
 LR_FEATURES = 2e-4  # lower LR for conv "feature extractor"
 LR_HEAD = 1e-3  # higher LR for classifier head
-MAX_EPOCHS = 20
+MAX_EPOCHS = 70
 PATIENCE = 5
 SEED = 42
 NUM_WORKERS = 0
@@ -41,6 +41,10 @@ USE_CHECKPOINT_NORM = True
 
 # If you want to save misclassified in test set
 MISCLASS_CSV = "misclassified_finetune.csv"
+
+# ---- NEW: Per-label class weights override (order: [doum, tak, tik, pa2]) ----
+# Set to None to use the weights stored in the checkpoint.
+WEIGHTS = [1,1,1,1]  # e.g., WEIGHTS = [2.0, 1.0, 1.5, 3.0]
 # ======================================================
 
 
@@ -323,7 +327,17 @@ def main():
 
     print("Checkpoint classes:", ckpt_classes)
     print("Checkpoint mean/std:", ckpt_mean, ckpt_std)
-    print("Checkpoint class weights:", ckpt_class_weights)
+    print("Checkpoint class weights (from ckpt):", ckpt_class_weights)
+
+    # ---- NEW: OPTIONAL override of class weights using global WEIGHTS ----
+    if WEIGHTS is not None:
+        if len(WEIGHTS) != 4:
+            raise ValueError("WEIGHTS must have 4 values for [doum, tak, tik, pa2].")
+        provided_order = ["doum", "tak", "tik", "pa2"]
+        label2w = {k: float(v) for k, v in zip(provided_order, WEIGHTS)}
+        ckpt_class_weights = [label2w.get(c, 1.0) for c in ckpt_classes]
+        print("Overriding class weights with WEIGHTS (reordered to ckpt classes):",
+              ckpt_class_weights)
 
     # 2) Build model and load weights
     num_classes = len(ckpt_classes)  # should be 4
@@ -374,7 +388,7 @@ def main():
         test_ds, batch_size=BATCH_SIZE, shuffle=False, num_workers=NUM_WORKERS
     )
 
-    # 6) Loss & optimizer (reuse weights in checkpoint order)
+    # 6) Loss & optimizer (reuse weights in checkpoint order or overridden WEIGHTS)
     weight_vec = torch.tensor(ckpt_class_weights, dtype=torch.float32, device=device)
     criterion = nn.CrossEntropyLoss(weight=weight_vec)
 
@@ -413,7 +427,7 @@ def main():
                     "classes": ckpt_classes,
                     "mean": mean,
                     "std": std,
-                    "class_weights": ckpt_class_weights,
+                    "class_weights": ckpt_class_weights,  # persisted (ckpt or overridden)
                     "mel_params": {
                         "SR": SR,
                         "N_FFT": N_FFT,

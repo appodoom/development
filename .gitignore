@@ -12,3 +12,5 @@ old1_regen_old.wav
 mels_data/
 misclassified wav files/
 CNN_model/old/
+CNN_model/mels_data2/
+CNN_model/mels_data_fine_tune/

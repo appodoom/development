@@ -8,12 +8,12 @@ N_FFT = 1024
 HOP_LENGTH = 256
 N_MELS = 64
 DATA_DIR = "../../data/Tracks_with_onsets"
-SAVE_DIR = "./mels_data"
+SAVE_DIR = "./mels_data2"
 
 
 def compute_and_save_mels(root_dir):
     os.makedirs(SAVE_DIR, exist_ok=True)
-    for label in ["doum", "tak", "tik", "pa2"]:
+    for label in ["doum", "tak","tik", "pa2", "taki"]:
         class_dir = os.path.join(root_dir, label)
         save_subdir = os.path.join(SAVE_DIR, label)
         os.makedirs(save_subdir, exist_ok=True)
