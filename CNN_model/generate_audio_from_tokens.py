@@ -2,7 +2,8 @@ import soundfile as sf
 import numpy as np
 import re
 import os
-import random
+
+# import random
 from get_corpus import get_note_duration, get_corpus
 
 
@@ -10,7 +11,7 @@ def generate_audio_from_tokens(
     list_of_tokens,
     tempo,
     audio_folder="../data/fundemental_hits",
-    variations_folder="./data",
+    # variations_folder="./data",
 ):
     quarter_duration = 60.0 / tempo[0]
     note_durations = get_note_duration(quarter_duration)
@@ -19,28 +20,16 @@ def generate_audio_from_tokens(
 
     chosen_paths = []
     durations = []
-
     for token in list_of_tokens:
         subs = token_re.findall(token)
         for letter, dur_str in subs:
             dur_key = float(dur_str)
             dur_seconds = note_durations[dur_key]
-            letter_folder = os.path.join(variations_folder, f"./{letter}")
-            if not os.path.isdir(letter_folder):
-                print(f"⚠️ No folder found for {letter}, skipping.")
-                continue
-            wav_files = [
-                f for f in os.listdir(letter_folder) if f.lower().endswith(".wav")
-            ]
-            if not wav_files:
-                print(f"⚠️ No wav files found in {letter_folder}, skipping.")
-                continue
-            chosen_file = random.choice(wav_files)
-            wav_path = os.path.join(letter_folder, chosen_file)
+            wav_file = os.path.join(audio_folder, f"{letter}.wav")
 
-            chosen_paths.append(wav_path)
+            chosen_paths.append(wav_file)
             durations.append(dur_seconds)
-            print(f"→ will play {chosen_file} ({letter}) for {dur_seconds:.3f}s")
+            print(f"→ will play {letter}.wav for {dur_seconds:.3f}s")
 
     segments = []
     for path, dur in zip(chosen_paths, durations):
@@ -58,12 +47,12 @@ def generate_audio_from_tokens(
         segments.append(data)
 
     combined = np.concatenate(segments)
-    sf.write("old4_regen_new.wav", data=combined, samplerate=fs)
+    sf.write("old1_fund_regen_new.wav", data=combined, samplerate=fs)
 
 
 classified_hits_with_model_pred, tempo = get_corpus(
     fundamentals_path="../mel.json",
-    file_path="../data/first_data/old4.wav",
+    file_path="../data/first_data/old1.wav",
     model_pred=True,
     log_mel=False,
 )
