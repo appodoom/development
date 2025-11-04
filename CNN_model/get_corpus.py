@@ -6,6 +6,13 @@ import torch.nn as nn
 import matplotlib.pyplot as plt
 
 
+def get_amp_bin_values(y, onsets, amp_bin_values):
+    onset_amps = np.abs(y[onsets - 1])
+    onset_amps = onset_amps / np.max(onset_amps)
+    bin_indices = [int(np.argmin(np.abs(amp_bin_values - amp))) for amp in onset_amps]
+    return bin_indices
+
+
 class SmallAudioCNN(nn.Module):
     def __init__(self, n_classes):
         super().__init__()
@@ -264,20 +271,12 @@ def plot_mel(
     plt.close()
 
 
-# def plot_mel(mel, sr):
-#     plt.figure(figsize=(8, 4))
-#     librosa.display.specshow(mel, sr=sr, x_axis="time", y_axis="mel", cmap="magma")
-#     plt.title("Segment")
-#     plt.colorbar(format="%+2.0f dB")
-#     plt.tight_layout()
-#     plt.show()
-
-
-def get_corpus(fundamentals_path, file_path, model_pred, log_mel):
+def get_corpus(fundamentals_path, file_path, model_pred, log_mel, amp_bin_values):
     y, sr = load_file(file_path)
     y = librosa.resample(y, orig_sr=sr, target_sr=48000)
     sr = 48000
     y = np.concatenate([np.zeros(48000), y])
+    onsets = get_onsets(y=y, sr=sr)
     fundamentals = load_json(fundamentals_path)
     intervals_duration = get_intervals_for_duration(y, sr)
     intervals = get_intervals(y, sr)
@@ -286,8 +285,12 @@ def get_corpus(fundamentals_path, file_path, model_pred, log_mel):
     note_durations = get_note_duration(quarter_duration)  # in seconds
     classified_hits = []
     count = 1
+    amplitudes = get_amp_bin_values(y, onsets=onsets, amp_bin_values=amp_bin_values)
+
     if model_pred:
-        for interval, interval_dur in zip(intervals, intervals_duration):
+        for i, (interval, interval_dur) in enumerate(
+            zip(intervals, intervals_duration)
+        ):
             segment = y[interval[0] : interval[1]]
             mel = librosa.feature.melspectrogram(y=segment, sr=sr)  # TODO revisit
             if log_mel:
@@ -298,6 +301,7 @@ def get_corpus(fundamentals_path, file_path, model_pred, log_mel):
             # print(f"Choosen fundemental is: {best_hit} with max corr score = {best_score}")
             # print("")
             hit_duration = (interval_dur[1] - interval_dur[0]) / sr  # in seconds
+            best_amp_bin = str(amplitudes[i])
             min_diff = np.inf
             best_note = ""
             for note in note_durations:
@@ -305,11 +309,14 @@ def get_corpus(fundamentals_path, file_path, model_pred, log_mel):
                 if diff < min_diff:
                     min_diff = diff
                     best_note = str(note)
-            classified_hits.append(best_hit + "_" + best_note)
+
+            classified_hits.append(best_hit + "_" + best_note + "_" + best_amp_bin)
             count += 1
 
     else:
-        for interval, interval_dur in zip(intervals, intervals_duration):
+        for i, (interval, interval_dur) in enumerate(
+            zip(intervals, intervals_duration)
+        ):
             segment = y[interval[0] : interval[1]]
             mel = librosa.feature.melspectrogram(y=segment, sr=sr)  # TODO revisit
 
@@ -328,12 +335,13 @@ def get_corpus(fundamentals_path, file_path, model_pred, log_mel):
             hit_duration = (interval_dur[1] - interval_dur[0]) / sr  # in seconds
             min_diff = np.inf
             best_note = ""
+            best_amp_bin = str(amplitudes[i])
             for note in note_durations:
                 diff = abs(note_durations[note] - hit_duration)
                 if diff < min_diff:
                     min_diff = diff
                     best_note = str(note)
-            classified_hits.append(best_hit + "_" + best_note)
+            classified_hits.append(best_hit + "_" + best_note + "_" + best_amp_bin)
 
     return classified_hits, tempo
 

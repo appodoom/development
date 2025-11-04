@@ -2,8 +2,6 @@ import soundfile as sf
 import numpy as np
 import re
 import os
-
-# import random
 from get_corpus import get_note_duration, get_corpus
 
 
@@ -55,6 +53,7 @@ classified_hits_with_model_pred, tempo = get_corpus(
     file_path="../data/first_data/old1.wav",
     model_pred=True,
     log_mel=False,
+    amp_bin_values=[0.17, 0.36, 0.8],
 )
 print(classified_hits_with_model_pred)
 generate_audio_from_tokens(list_of_tokens=classified_hits_with_model_pred, tempo=tempo)
