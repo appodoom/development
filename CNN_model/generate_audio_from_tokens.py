@@ -53,7 +53,7 @@ classified_hits_with_model_pred, tempo = get_corpus(
     file_path="../data/first_data/old1.wav",
     model_pred=True,
     log_mel=False,
-    amp_bin_values=[0.17, 0.36, 0.8],
+    amp_bin_values=[0.0975, 0.3, 0.17],
 )
 print(classified_hits_with_model_pred)
 generate_audio_from_tokens(list_of_tokens=classified_hits_with_model_pred, tempo=tempo)

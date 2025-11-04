@@ -6,11 +6,54 @@ import torch.nn as nn
 import matplotlib.pyplot as plt
 
 
-def get_amp_bin_values(y, onsets, amp_bin_values):
-    onset_amps = np.abs(y[onsets - 1])
-    onset_amps = onset_amps / np.max(onset_amps)
-    bin_indices = [int(np.argmin(np.abs(amp_bin_values - amp))) for amp in onset_amps]
-    return bin_indices
+# def get_amp_bin_values(y, onsets, amp_bin_values):
+#     onset_amps = np.abs(y[onsets - 1])
+#     onset_amps = onset_amps / np.max(onset_amps)
+#     bin_indices = [int(np.argmin(np.abs(amp_bin_values - amp))) for amp in onset_amps]
+#     return bin_indices
+
+
+def get_closest_amplitude_bin(y, amplitude_bins, mode="rms", normalize=True, eps=1e-12):
+    """
+    For a single onset waveform y, compute its amplitude and return
+    the closest value from amp_bin_values.
+
+    Parameters
+    ----------
+    y : np.ndarray
+        Audio samples for one onset (1D).
+    amp_bin_values : list/np.ndarray
+        Candidate amplitude bins (typically in [0, 1]).
+    mode : {'rms', 'peak'}
+        How to measure amplitude. 'rms' is more robust; 'peak' is max |y|.
+    normalize : bool
+        If True, peak-normalize y before measuring amplitude (recommended
+        if bins are on [0,1]).
+    eps : float
+        Tiny constant to avoid divide-by-zero on silent segments.
+
+    Returns
+    -------
+    float
+        The closest amplitude **bin value**.
+    """
+    y = np.asarray(y, dtype=float)
+    bins = np.asarray(amplitude_bins, dtype=float)
+
+    if normalize:
+        peak = np.max(np.abs(y))
+        if peak > eps:
+            y = y / peak  # bring into [−1, 1]
+
+    if mode == "rms":
+        amp = np.sqrt(np.mean(y**2))
+    elif mode == "peak":
+        amp = np.max(np.abs(y))
+    else:
+        raise ValueError("mode must be 'rms' or 'peak'")
+
+    idx = int(np.argmin(np.abs(bins - amp)))
+    return float(bins[idx]), amp
 
 
 class SmallAudioCNN(nn.Module):
@@ -276,7 +319,6 @@ def get_corpus(fundamentals_path, file_path, model_pred, log_mel, amp_bin_values
     y = librosa.resample(y, orig_sr=sr, target_sr=48000)
     sr = 48000
     y = np.concatenate([np.zeros(48000), y])
-    onsets = get_onsets(y=y, sr=sr)
     fundamentals = load_json(fundamentals_path)
     intervals_duration = get_intervals_for_duration(y, sr)
     intervals = get_intervals(y, sr)
@@ -284,8 +326,7 @@ def get_corpus(fundamentals_path, file_path, model_pred, log_mel, amp_bin_values
     quarter_duration = 60.0 / tempo  # in seconds
     note_durations = get_note_duration(quarter_duration)  # in seconds
     classified_hits = []
-    count = 1
-    amplitudes = get_amp_bin_values(y, onsets=onsets, amp_bin_values=amp_bin_values)
+    # count = 1
 
     if model_pred:
         for i, (interval, interval_dur) in enumerate(
@@ -295,13 +336,15 @@ def get_corpus(fundamentals_path, file_path, model_pred, log_mel, amp_bin_values
             mel = librosa.feature.melspectrogram(y=segment, sr=sr)  # TODO revisit
             if log_mel:
                 mel = librosa.power_to_db(mel, ref=np.max, top_db=80)
-            if count == 9 or count == 8 or count == 2:
-                plot_mel(index=count, mel=mel)
+            # if count == 9 or count == 8 or count == 2:
+            #     plot_mel(index=count, mel=mel)
             best_hit, _ = predict_hit(model=MODEL, y=segment, sr=sr)  # _ : probs
             # print(f"Choosen fundemental is: {best_hit} with max corr score = {best_score}")
             # print("")
             hit_duration = (interval_dur[1] - interval_dur[0]) / sr  # in seconds
-            best_amp_bin = str(amplitudes[i])
+            best_amp_bin = str(
+                get_closest_amplitude_bin(y=segment, amplitude_bins=amp_bin_values)
+            )
             min_diff = np.inf
             best_note = ""
             for note in note_durations:
@@ -311,7 +354,7 @@ def get_corpus(fundamentals_path, file_path, model_pred, log_mel, amp_bin_values
                     best_note = str(note)
 
             classified_hits.append(best_hit + "_" + best_note + "_" + best_amp_bin)
-            count += 1
+            # count += 1
 
     else:
         for i, (interval, interval_dur) in enumerate(
@@ -335,7 +378,9 @@ def get_corpus(fundamentals_path, file_path, model_pred, log_mel, amp_bin_values
             hit_duration = (interval_dur[1] - interval_dur[0]) / sr  # in seconds
             min_diff = np.inf
             best_note = ""
-            best_amp_bin = str(amplitudes[i])
+            best_amp_bin = str(
+                get_closest_amplitude_bin(y=segment, amplitude_bins=amp_bin_values)
+            )
             for note in note_durations:
                 diff = abs(note_durations[note] - hit_duration)
                 if diff < min_diff:
