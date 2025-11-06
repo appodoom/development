@@ -23,6 +23,8 @@ def generate_audio_from_tokens(
         for letter, dur_str in subs:
             dur_key = float(dur_str)
             dur_seconds = note_durations[dur_key]
+            if letter == "taki":
+                letter = "tak"
             wav_file = os.path.join(audio_folder, f"{letter}.wav")
 
             chosen_paths.append(wav_file)
@@ -45,7 +47,7 @@ def generate_audio_from_tokens(
         segments.append(data)
 
     combined = np.concatenate(segments)
-    sf.write("old1_fund_regen_new.wav", data=combined, samplerate=fs)
+    sf.write("old1_regen_fine_tune.wav", data=combined, samplerate=fs)
 
 
 classified_hits_with_model_pred, tempo = get_corpus(
@@ -53,7 +55,7 @@ classified_hits_with_model_pred, tempo = get_corpus(
     file_path="../data/first_data/old1.wav",
     model_pred=True,
     log_mel=False,
-    amp_bin_values=[0.0975, 0.3, 0.17],
+    # amp_bin_values=[0.0975, 0.3, 0.17],
 )
 print(classified_hits_with_model_pred)
 generate_audio_from_tokens(list_of_tokens=classified_hits_with_model_pred, tempo=tempo)
