@@ -10,17 +10,14 @@ from torch.utils.data import Dataset, DataLoader
 # from torch.utils.data.sampler import WeightedRandomSampler  # optional if you want sampler-based balancing
 
 # ======================= CONFIG (edit me) =======================
-DATA_DIR = "./mels_data2"
-CLASSES = ["doum", "tak", "tik", "pa2","taki"]
+DATA_DIR = "./mels_data_doum_tak"
+CLASSES = ["doum", "tak"]
 
 # give a number (hyperparameter) for each label
 # these act as class weights in the loss: larger number => that class’ errors are penalized more
 CLASS_WEIGHTS = {
-    "doum": 0.221,
-    "tak": 0.09,
-    "tik": 0.221,
-    "pa2": 0.275,
-    "taki": 1.0
+    "doum": 1.0,
+    "tak": 1.0
 }
 
 VAL_RATIO = 0.15
@@ -31,8 +28,8 @@ MAX_EPOCHS = 50
 PATIENCE = 8  # early-stopping patience (epochs)
 SEED = 42
 NUM_WORKERS = 0  # set >0 if your OS benefits (Linux); Windows often 0
-MODEL_PATH = "best_model2.pt"
-MISCLASS_CSV = "misclassified2.csv"
+MODEL_PATH = "best_model_doum_tak.pt"
+MISCLASS_CSV = "misclassified_doum_tak.csv"
 
 # If mels have variable time length, we pad/crop to this many frames (time axis).
 # You can set None to keep variable length; model uses AdaptiveAvgPool so it's okay to vary.

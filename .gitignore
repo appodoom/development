@@ -14,3 +14,6 @@ misclassified wav files/
 CNN_model/old/
 CNN_model/mels_data2/
 CNN_model/mels_data_fine_tune/
+CNN_model/mels_binary_data/
+CNN_model/mels_data_balancing/
+CNN_model/mels_data_doum_tak/

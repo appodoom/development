@@ -1,0 +1,4 @@
+mel_path,wav_path,true_label,pred_label,confidence
+./mels_data_doum_tak\tak\0017.npy,./mels_data_doum_tak\tak\0017.npy,tak,doum,0.5530185699462891
+./mels_data_doum_tak\tak\0052.npy,./mels_data_doum_tak\tak\0052.npy,tak,doum,0.5580270290374756
+./mels_data_doum_tak\doum\0175.npy,./mels_data_doum_tak\doum\0175.npy,doum,tak,0.7231343984603882
