@@ -85,7 +85,7 @@ class SmallAudioCNN(nn.Module):
         return x
 
 
-CKPT_PATH = "best_model_finetuned.pt"
+CKPT_PATH = "best_model_doum_tak.pt"
 ckpt = torch.load(CKPT_PATH, map_location="cpu")
 
 SAMPLE_RATE = 48000
@@ -391,12 +391,12 @@ def get_corpus(fundamentals_path, file_path, model_pred, log_mel):
     return classified_hits, tempo
 
 
-# classified_hits_with_model_pred, _ = get_corpus(
-#     fundamentals_path="../mel.json",
-#     file_path="../data/first_data/old1.wav",
-#     model_pred=True,
-#     log_mel=False,
-# )
+classified_hits_with_model_pred, _ = get_corpus(
+    fundamentals_path="../mel.json",
+    file_path="../../data/first_data/old1.wav",
+    model_pred=True,
+    log_mel=False,
+)
 # classified_hits_sliding_window, _ = get_corpus(
 #     fundamentals_path="../mel.json",
 #     file_path="../data/first_data/old1.wav",
@@ -404,7 +404,7 @@ def get_corpus(fundamentals_path, file_path, model_pred, log_mel):
 #     log_mel=False,
 # )
 
-# print(classified_hits_with_model_pred)
+print(classified_hits_with_model_pred)
 # print(classified_hits_sliding_window)
 # print("")
 # classified_hits_old, _ = get_corpus_old(
