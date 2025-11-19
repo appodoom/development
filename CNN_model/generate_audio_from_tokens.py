@@ -47,7 +47,7 @@ def generate_audio_from_tokens(
         segments.append(data)
 
     combined = np.concatenate(segments)
-    sf.write("old1_regen_fine_tune.wav", data=combined, samplerate=fs)
+    sf.write("old1_regen_binary_model.wav", data=combined, samplerate=fs)
 
 
 classified_hits_with_model_pred, tempo = get_corpus(
