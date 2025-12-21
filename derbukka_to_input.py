@@ -22,16 +22,17 @@ def get_arrays(content):
 def get_sequence(file_path):
     data=load_file(file_path=file_path)
     global_tempo, tempos, skeleton, variations= get_arrays(content=data)
-    sequence=["TEMPO_"+str(tempos[0]-global_tempo)]
+    sequence=[]
     i=0
     j=0
     k=0
     count=0
     value=0
+    beat_value=0
     previous_tempo=global_tempo
     while (i!=len(skeleton)):
         if skeleton[i].split("_")[0]=="DELAY":
-            count=int(skeleton[i].split("_")[1])
+            count=float(skeleton[i].split("_")[1])
             i+=1
         else:
             sequence.append(skeleton[i])
@@ -40,6 +41,12 @@ def get_sequence(file_path):
         while (count!=0 and j!=len(variations)):
             if variations[j].split("_")[0]=="SUBD":
                 value=int(variations[j].split("_")[1])
+                previous_tempo=tempos[k]
+                if k<len(tempos)-1:
+                    k+=1
+                    sequence.append("TEMPO_"+str(tempos[k]-previous_tempo))
+                else:
+                    sequence.append("TEMPO_"+str(tempos[k]-previous_tempo))
                 sequence.append(variations[j])
                 j+=1
             else:
@@ -47,13 +54,9 @@ def get_sequence(file_path):
                 sequence.append(variations[j+1])
                 j+=2
                 count-=1/value
-                if count%1==0:
-                    previous_tempo=tempos[k]
-                    k+=1
-                    sequence.append("TEMPO_"+str(tempos[k]-previous_tempo))
     sequences={"sequence":sequence}
-    save_json(data=sequences, file_name="sequence.json")
-get_sequence("sample.txt")
+    save_json(data=sequences, file_name="sequence_khara.json")
+get_sequence("khara.txt")
 
 
 

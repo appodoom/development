@@ -29,13 +29,13 @@ def to_derbukka(directory,initial_tempo):
             value=1/int(sequence[i].split("_")[1])
         elif sequence[i].split("_")[0]=="AMP":
             variations_str+=sequence[i-1]+" "+sequence[i]+" "
+            count+=value
         elif sequence[i].split("_")[0]=="DEV":
-            skeleton_str+="DELAY_"+str(count)+" "+sequence[i-1]+" "+sequence[i]+" "
+            skeleton_str+="DELAY_"+str(int(count) if count%1==0 else count)+" "+sequence[i-1]+" "+sequence[i]+" "
             count=0
         else:
             continue
-        count+=value
-    write_derbukka("output.txt", initial_tempo_str+"\n"+tempos_str+"\n"+skeleton_str+"\n"+variations_str)
+    write_derbukka("output.txt", initial_tempo_str+"\n"+tempos_str[:-1]+"\n"+skeleton_str[:-1]+"\n"+variations_str[:-1])
 
 to_derbukka("sequence.json", 110.0)
 
