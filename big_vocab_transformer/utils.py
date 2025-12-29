@@ -10,3 +10,9 @@ def load_json(json_file_path: str):
     with open(json_file_path, "r", encoding="utf-8") as f:
         data = json.load(f)
     return data
+
+
+def load_file(file_path):
+    with open(file_path, "r", encoding="utf-8") as f:
+        content = f.read()
+    return content
