@@ -4,7 +4,7 @@ mel_path,wav_path,true_label,pred_label,confidence
 ./mels_data_balancing\tak\0348.npy,./mels_data_balancing\tak\0348.npy,tak,tik,0.67473965883255
 ./mels_data_balancing\tak\0014.npy,./mels_data_balancing\tak\0014.npy,tak,doum,0.4285247325897217
 ./mels_data_balancing\tak\0183.npy,./mels_data_balancing\tak\0183.npy,tak,doum,0.6857080459594727
-./mels_data_balancing\tik\0632.npy,./mels_data_balancing\tik\0632.npy,tik,pa2,0.6573224067687988
+./mels_data_balancing\tik\0632.npy,./mels_data_balancing\tik\0632.npy,tik,PAA,0.6573224067687988
 ./mels_data_balancing\tak\0046.npy,./mels_data_balancing\tak\0046.npy,tak,doum,0.5084388852119446
 ./mels_data_balancing\doum\0175.npy,./mels_data_balancing\doum\0175.npy,doum,tak,0.8411641716957092
 ./mels_data_balancing\tak\0105.npy,./mels_data_balancing\tak\0105.npy,tak,doum,0.7904772758483887
@@ -13,9 +13,9 @@ mel_path,wav_path,true_label,pred_label,confidence
 ./mels_data_balancing\tak\0186.npy,./mels_data_balancing\tak\0186.npy,tak,doum,0.859417736530304
 ./mels_data_balancing\tak\0075.npy,./mels_data_balancing\tak\0075.npy,tak,doum,0.8010398745536804
 ./mels_data_balancing\tak\0116.npy,./mels_data_balancing\tak\0116.npy,tak,doum,0.7577223181724548
-./mels_data_balancing\pa2\0354.npy,./mels_data_balancing\pa2\0354.npy,pa2,tak,0.7575129866600037
+./mels_data_balancing\PAA\0354.npy,./mels_data_balancing\PAA\0354.npy,PAA,tak,0.7575129866600037
 ./mels_data_balancing\tak\0095.npy,./mels_data_balancing\tak\0095.npy,tak,doum,0.7022064924240112
 ./mels_data_balancing\tak\0644.npy,./mels_data_balancing\tak\0644.npy,tak,tik,0.776298463344574
 ./mels_data_balancing\tik\0585.npy,./mels_data_balancing\tik\0585.npy,tik,tak,0.5177322626113892
-./mels_data_balancing\tik\0643.npy,./mels_data_balancing\tik\0643.npy,tik,pa2,0.6068354845046997
+./mels_data_balancing\tik\0643.npy,./mels_data_balancing\tik\0643.npy,tik,PAA,0.6068354845046997
 ./mels_data_balancing\tak\0017.npy,./mels_data_balancing\tak\0017.npy,tak,doum,0.808856725692749

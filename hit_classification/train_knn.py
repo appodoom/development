@@ -25,7 +25,7 @@ LOGF_WEIGHT    = True
 K              = 1
 VAL_RATIO      = 0.20           # per-class 80/20 split
 RNG_SEED       = 39874839
-LABELS         = ("pa2", "doum", "tak", "tik")
+LABELS         = ("PAA", "doum", "tak", "tik")
 
 # Type aliases
 Pair = Tuple[str, str]

@@ -29,29 +29,34 @@ def build_trie(vocab_list, atom_pattern):
 
 
 def tokenize_atoms(atoms, trie, vocab_list):
-    """
-    Tokenize the list of atomic tokens into merge-tokens using longest-prefix matching.
-    Raises ValueError if no match is found at a position.
-    Returns list of vocab_list entries (merge strings).
-    """
     output = []
     i = 0
     n = len(atoms)
+
     while i < n:
+        if atoms[i].startswith("<") and atoms[i].endswith(">"):
+            output.append(atoms[i])   # keep as-is
+            i += 1
+            continue
+
         node = trie
         last_match = None
         last_len = 0
         j = i
+
         while j < n and atoms[j] in node.children:
             node = node.children[atoms[j]]
             j += 1
             if node.token_id is not None:
                 last_match = node.token_id
                 last_len = j - i
+
         if last_match is None:
             raise ValueError(f"Unknown atomic token '{atoms[i]}' at position {i}")
+
         output.append(vocab_list[last_match])
         i += last_len
+
     return output
 
 

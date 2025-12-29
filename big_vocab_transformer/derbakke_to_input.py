@@ -3,7 +3,7 @@ sequence of tokens thatt will be taken as input by the model"""
 
 from utils import load_file, save_json
 import os
-
+from defaults import CORPUS_JSON_PATH
 folder = "./fixed"
 
 
@@ -64,11 +64,13 @@ def get_sequence(file_path, index):
                 )
                 j += 2
                 count -= 1 / value
-    sequences = {"sequence": sequence}
-    save_json(output_json_path=f"./corpus/sequence_{index}.json", data=sequences)
+    return sequence
 
-
+all = []
 for i, filename in enumerate(os.listdir(folder)):
     filepath = os.path.join(folder, filename)
     if os.path.isfile(filepath):
-        get_sequence(file_path=filepath, index=i)
+        data = get_sequence(file_path=filepath, index=i)
+        data.append("<EOF>")
+        all.extend(data)
+save_json(output_json_path=CORPUS_JSON_PATH, data=all)

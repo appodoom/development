@@ -3,10 +3,10 @@ mel_path,wav_path,true_label,pred_label,confidence
 ./mels_data2\taki\0081.npy,./mels_data2\taki\0081.npy,taki,doum,0.6139016151428223
 ./mels_data2\doum\0718.npy,./mels_data2\doum\0718.npy,doum,taki,0.5006872415542603
 ./mels_data2\doum\0761.npy,./mels_data2\doum\0761.npy,doum,taki,0.8478070497512817
-./mels_data2\tik\0103.npy,./mels_data2\tik\0103.npy,tik,pa2,0.8234786987304688
+./mels_data2\tik\0103.npy,./mels_data2\tik\0103.npy,tik,PAA,0.8234786987304688
 ./mels_data2\doum\0758.npy,./mels_data2\doum\0758.npy,doum,taki,0.547235369682312
 ./mels_data2\tik\0023.npy,./mels_data2\tik\0023.npy,tik,tak,0.5833777785301208
-./mels_data2\pa2\0470.npy,./mels_data2\pa2\0470.npy,pa2,taki,0.6200525760650635
+./mels_data2\PAA\0470.npy,./mels_data2\PAA\0470.npy,PAA,taki,0.6200525760650635
 ./mels_data2\doum\0175.npy,./mels_data2\doum\0175.npy,doum,tak,0.9051393866539001
 ./mels_data2\taki\0098.npy,./mels_data2\taki\0098.npy,taki,doum,0.8524397611618042
 ./mels_data2\taki\0085.npy,./mels_data2\taki\0085.npy,taki,tak,0.7928406596183777

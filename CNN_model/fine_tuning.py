@@ -42,7 +42,7 @@ USE_CHECKPOINT_NORM = True
 # If you want to save misclassified in test set
 MISCLASS_CSV = "misclassified_finetune.csv"
 
-# ---- NEW: Per-label class weights override (order: [doum, tak, tik, pa2]) ----
+# ---- NEW: Per-label class weights override (order: [doum, tak, tik, PAA]) ----
 # Set to None to use the weights stored in the checkpoint.
 WEIGHTS = [1,1,1,1]  # e.g., WEIGHTS = [2.0, 1.0, 1.5, 3.0]
 # ======================================================
@@ -201,7 +201,7 @@ class SmallAudioCNN(nn.Module):
             nn.Linear(64, 64),
             nn.ReLU(),
             nn.Dropout(0.2),
-            nn.Linear(64, 4),  # <-- keep 4 outputs (doum,tak,tik,pa2)
+            nn.Linear(64, 4),  # <-- keep 4 outputs (doum,tak,tik,PAA)
         )
 
     def forward(self, x):
@@ -314,7 +314,7 @@ def main():
     ckpt = torch.load(CHECKPOINT_PATH, map_location=device)
 
     # classes & weights from checkpoint (fallback to defaults)
-    ckpt_classes = ckpt.get("classes", ["doum", "tak", "tik", "pa2"])
+    ckpt_classes = ckpt.get("classes", ["doum", "tak", "tik", "PAA"])
     if "class_weights" in ckpt:
         ckpt_class_weights = [float(x) for x in ckpt["class_weights"]]
     else:
@@ -332,8 +332,8 @@ def main():
     # ---- NEW: OPTIONAL override of class weights using global WEIGHTS ----
     if WEIGHTS is not None:
         if len(WEIGHTS) != 4:
-            raise ValueError("WEIGHTS must have 4 values for [doum, tak, tik, pa2].")
-        provided_order = ["doum", "tak", "tik", "pa2"]
+            raise ValueError("WEIGHTS must have 4 values for [doum, tak, tik, PAA].")
+        provided_order = ["doum", "tak", "tik", "PAA"]
         label2w = {k: float(v) for k, v in zip(provided_order, WEIGHTS)}
         ckpt_class_weights = [label2w.get(c, 1.0) for c in ckpt_classes]
         print("Overriding class weights with WEIGHTS (reordered to ckpt classes):",

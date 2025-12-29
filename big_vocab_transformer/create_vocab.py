@@ -1,6 +1,8 @@
 import re
 from collections import Counter
 from typing import Iterable, List, Tuple, Dict, Union, Set
+from defaults import VOCAB_SIZE,VOCAB_JSON_PATH,CORPUS_JSON_PATH
+from utils import load_json,save_json
 
 Token = str
 Pair = Tuple[Token, Token]
@@ -72,3 +74,7 @@ def creat_vocab(
             vocab.append(new_tok)
 
     return merges, vocab, dict(Counter(seq))
+
+corpus_data = load_json(json_file_path=CORPUS_JSON_PATH)
+merges, vocab,_ = creat_vocab(corpus=corpus_data,desired_vocab_size=VOCAB_SIZE)
+save_json(output_json_path=VOCAB_JSON_PATH,data=vocab)
