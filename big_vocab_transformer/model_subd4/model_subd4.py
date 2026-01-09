@@ -48,7 +48,7 @@ def split_on_eof_tokens(token_list, eof_token=EOF_TOKEN):
             token = t.split()
             for i in token :
                 elem_token = i.split("_")
-                if elem_token[1] != '0' and elem_token[1] != '4' :
+                if elem_token[1] != '4' and  elem_token[1] != '0' :
                     add = False
             if add :
                 cur.append(t)
