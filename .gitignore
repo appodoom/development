@@ -17,3 +17,5 @@ CNN_model/mels_data_fine_tune/
 CNN_model/mels_binary_data/
 CNN_model/mels_data_balancing/
 CNN_model/mels_data_doum_tak/
+.DS_store
+big_vocab_transformer/.DS_store
