@@ -1,0 +1,9 @@
+{
+  "dtype": "uint16",
+  "train_tokens": 276031,
+  "val_tokens": 52493,
+  "val_ratio": 0.1,
+  "seed": 1337,
+  "add_bos_per_file": false,
+  "ensure_eof": true
+}
