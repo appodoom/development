@@ -11,7 +11,7 @@ import torch.nn.functional as F
 from torch.nn.utils import clip_grad_norm_
 
 from lm_dataset import make_loaders
-from model_gpt import GPT, GPTConfig
+from two_layers_transformer.model_gpt import GPT, GPTConfig
 
 
 def load_vocab(out_dir: Path) -> Tuple[Dict[str, int], List[str]]:

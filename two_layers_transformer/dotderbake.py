@@ -207,7 +207,7 @@ def regenerate(initial_tempo, tempos, skeleton_tokens, var_tokens, sr=48000):
         amplitude=VOLUME, tokens=skeleton_tokens, tempos=tempos
     )
     y = subdivisions_regenerator(var_tokens, tempos, y_sk, skeleton_hits_intervals)
-    sf.write("regenerated_new.wav", data=y, samplerate=48000)
+    sf.write("input.wav", data=y, samplerate=48000)
 
 
-play_from_dotderbake("./generated_with_vars.derbake")
+play_from_dotderbake("./input.derbake")

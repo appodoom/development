@@ -19,6 +19,7 @@ from model_gpt import GPT, GPTConfig
 # =========================
 # USER VARIABLES (EDIT ME)
 # =========================
+SAVE_INPUT_TXT = Path("./input.txt")  # <-- add this
 
 SKELETON_DIR = Path(r"./skeleton_model/model")
 VARIATIONS_DIR = Path(r"./variations_model/model")
@@ -470,6 +471,11 @@ def run_pipeline(full_prompt_text: str) -> Tuple[List[str], List[str]]:
 
 if __name__ == "__main__":
     user_prompt = input("Enter your model prompt: ").strip()
+
+    # Save the exact input (no trailing newline)
+    if user_prompt:
+        SAVE_INPUT_TXT.write_text(user_prompt, encoding="utf-8")
+
     skeleton, final = run_pipeline(user_prompt)
 
     sk_text = " ".join(skeleton)
@@ -483,4 +489,4 @@ if __name__ == "__main__":
 
     SAVE_SKELETON_TXT.write_text(sk_text + "\n", encoding="utf-8")
     SAVE_FINAL_TXT.write_text(final_text + "\n", encoding="utf-8")
-    print(f"\nSaved:\n- {SAVE_SKELETON_TXT}\n- {SAVE_FINAL_TXT}")
+    print(f"\nSaved:\n- {SAVE_INPUT_TXT}\n- {SAVE_SKELETON_TXT}\n- {SAVE_FINAL_TXT}")

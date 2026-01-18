@@ -4,14 +4,14 @@ import random
 
 # this file contains configuration for generator
 paths = {
-    "D": "./sounds/doums",
-    "OTA": "./sounds/taks",
-    "OTI": "./sounds/tiks",
-    "PAA": "./sounds/pa2s",
+    "D": "../sounds/doums",
+    "OTA": "../sounds/taks",
+    "OTI": "../sounds/tiks",
+    "PAA": "../sounds/pa2s",
     # "RA": "./sounds/ra.wav",
     # "T1": "./sounds/tik1.wav",
     # "T2": "./sounds/tik2.wav",
-    "S": "./sounds/silence",
+    "S": "../sounds/silence",
 }
 
 
